@@ -181,10 +181,12 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+HELMIFY ?= $(LOCALBIN)/helmify
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.1.1
 CONTROLLER_TOOLS_VERSION ?= v0.13.0
+HELMIFY_VERSION ?= v0.4.10
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -268,5 +270,15 @@ license: ## Add license headers to all files.
 	@echo "Adding license headers to all files..."
 	go run -mod=mod github.com/google/addlicense@latest -ignore "**/*.sql" -ignore "charts/**/*" -l apache -c "The Atlas Operator Authors." .
 
+.PHONY: helmify
+helmify: $(HELMIFY) ## Download helmify locally if necessary. If wrong version is installed, it will be overwritten.
+$(HELMIFY): $(LOCALBIN)
+	test -s $(LOCALBIN)/helmify && $(LOCALBIN)/helmify --version | grep -q $(HELMIFY_VERSION) || \
+	GOBIN=$(LOCALBIN) go install -ldflags "-X main.version=$(HELMIFY_VERSION)" github.com/arttor/helmify/cmd/helmify@$(HELMIFY_VERSION)
+
+.PHONY: helm
+helm: manifests kustomize license helmify
+	$(KUSTOMIZE) build config/helm | $(HELMIFY) -crd-dir charts/atlas-operator
+
 .PHONY: cli-gen
-cli-gen: generate manifests chart-manifests license
+cli-gen: generate manifests helm license
