@@ -278,7 +278,7 @@ $(HELMIFY): $(LOCALBIN)
 
 .PHONY: helm
 helm: manifests kustomize license helmify
-	$(KUSTOMIZE) build config/helm | $(HELMIFY) -crd-dir charts/atlas-operator
+	$(KUSTOMIZE) build config/helm | $(HELMIFY) -crd-dir -generate-defaults -image-pull-secrets charts/atlas-operator
 
 .PHONY: cli-gen
 cli-gen: generate manifests helm license
