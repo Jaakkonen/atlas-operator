@@ -1,18 +1,18 @@
 controllerManager:
   manager:
     args:
-    - --leader-elect
+      - --leader-elect
     containerSecurityContext:
       allowPrivilegeEscalation: false
       capabilities:
         drop:
-        - ALL
+          - ALL
       runAsUser: 1000
     env:
       prewarmDevdb: "true"
     image:
       repository: arigaio/atlas-operator
-      tag: latest
+      tag: ""
     imagePullPolicy: IfNotPresent
     resources:
       limits:
