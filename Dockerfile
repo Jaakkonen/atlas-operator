@@ -13,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Build the manager binary
+# Build the manager binary and atlas CLI
 FROM golang:1.25.5-alpine3.23 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG OPERATOR_VERSION
 
 WORKDIR /workspace
+# Copy atlas submodule first for go.mod replace directive
+COPY atlas/ atlas/
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -34,23 +36,24 @@ COPY cmd/main.go cmd/main.go
 COPY api/ api/
 COPY internal/ internal/
 
+# Build operator manager
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} CGO_ENABLED=0 \
     go build -ldflags "-X 'main.version=${OPERATOR_VERSION}'" \
     -o manager -a cmd/main.go
 
-FROM alpine:3.23 as atlas
-RUN apk add --no-cache curl
-ARG ATLAS_VERSION=extended-latest
-ENV ATLAS_VERSION=${ATLAS_VERSION}
-RUN curl -sSf https://atlasgo.sh | sh
+# Build atlas CLI from submodule
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    cd atlas/cmd/atlas && \
+    GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} CGO_ENABLED=0 \
+    go build -o /workspace/atlas-cli .
 
 FROM alpine:3.23
 WORKDIR /
 COPY --from=builder /workspace/manager .
-COPY --from=atlas /usr/local/bin/atlas /usr/local/bin
-RUN chmod +x /usr/local/bin/atlas
+COPY --from=builder --chmod=755 /workspace/atlas-cli /usr/bin/atlas
 ENV ATLAS_KUBERNETES_OPERATOR=1
 USER 65532:65532
 # Workaround for the issue with x/tools/imports

@@ -2,6 +2,14 @@ module github.com/ariga/atlas-operator
 
 go 1.25.5
 
+// Replace with forked atlas containing TiDB patches.
+// This is needed IN ADDITION to the forked atlas binary because:
+// - The operator imports ariga.io/atlas/atlasexec and ariga.io/atlas/sql/migrate as Go libraries
+// - Without this replace, those packages come from upstream v1.1.0 which lacks our patches
+// - Key patch: LOWER() in schemasQuery for case-insensitive filtering (upstream does direct
+//   string comparison, failing on TiDB which returns INFORMATION_SCHEMA in uppercase)
+replace ariga.io/atlas => ./atlas
+
 require (
 	ariga.io/atlas v1.1.0
 	github.com/hashicorp/hcl/v2 v2.18.1
