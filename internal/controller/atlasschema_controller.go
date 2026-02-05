@@ -202,7 +202,7 @@ func (r *AtlasSchemaReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if hasCloudConfig {
 			return r.resultErr(res, err, dbv1alpha1.ReasonWhoAmI)
 		}
-	case errors.Is(err, atlasexec.ErrRequireEnterprise):
+	case isEnterpriseError(err):
 		if hasCloudConfig {
 			return r.resultErr(res, err, dbv1alpha1.ReasonWhoAmI)
 		}
