@@ -110,15 +110,14 @@ func (r *AtlasSchemaReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	defer func() {
+		// Always clean up devDB to ensure fresh state on next reconciliation.
+		// This prevents stale schema data from causing "already exists" errors on retry.
+		r.devDB.cleanUp(ctx, res)
 		if err := r.Status().Update(ctx, res); err != nil {
 			log.Error(err, "failed to update resource status")
 		}
 		// After updating the status, watch the dependent resources
 		r.watchRefs(res)
-		// Clean up any resources created by the controller after the reconciler is successful.
-		if res.IsReady() {
-			r.devDB.cleanUp(ctx, res)
-		}
 	}()
 	// When the resource is first created, create the "Ready" condition.
 	if len(res.Status.Conditions) == 0 {
