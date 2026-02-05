@@ -94,6 +94,8 @@ type (
 		RevisionsSchema string `json:"revisionsSchema,omitempty"`
 		// BaselineVersion defines the baseline version of the database on the first migration.
 		Baseline string `json:"baseline,omitempty"`
+		// ToVersion defines the target version to migrate to. If not set, all pending migrations will be applied.
+		ToVersion string `json:"toVersion,omitempty"`
 		// ExecOrder controls how Atlas computes and executes pending migration files to the database.
 		// +kubebuilder:default=linear
 		ExecOrder MigrateExecOrder `json:"execOrder,omitempty"`

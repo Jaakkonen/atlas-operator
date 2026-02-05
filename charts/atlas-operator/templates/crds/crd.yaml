@@ -53,6 +53,10 @@ spec:
                 description: BaselineVersion defines the baseline version of the database
                   on the first migration.
                 type: string
+              toVersion:
+                description: ToVersion defines the target version to migrate to. If
+                  not set, all pending migrations will be applied.
+                type: string
               cloud:
                 description: Cloud defines the Atlas Cloud configuration.
                 properties:

@@ -78,6 +78,7 @@ type (
 		Cloud           *Cloud
 		RevisionsSchema string
 		Baseline        string
+		ToVersion       string
 		ExecOrder       string
 		MigrateDown     bool
 		ObservedHash    string
@@ -381,7 +382,8 @@ func (r *AtlasMigrationReconciler) reconcile(ctx context.Context, data *migratio
 				TriggerType:    atlasexec.TriggerTypeKubernetes,
 				TriggerVersion: dbv1alpha1.VersionFromContext(ctx),
 			},
-			Vars: data.Vars,
+			Vars:      data.Vars,
+			ToVersion: data.ToVersion,
 		})
 		if err != nil {
 			return r.resultCLIErr(res, err, "Migrating")
@@ -435,6 +437,7 @@ func (r *AtlasMigrationReconciler) extractData(ctx context.Context, res *dbv1alp
 			DevURL:          s.DevURL,
 			RevisionsSchema: s.RevisionsSchema,
 			Baseline:        s.Baseline,
+			ToVersion:       s.ToVersion,
 			ExecOrder:       string(s.ExecOrder),
 			MigrateDown:     false,
 		}
@@ -612,6 +615,7 @@ func hashMigrationData(d *migrationData) (string, error) {
 		h.Write([]byte(c.URL))
 		h.Write([]byte(c.Repo))
 	}
+	h.Write([]byte(d.ToVersion))
 	switch {
 	case d.hasRemoteDir():
 		// Hash cloud directory
