@@ -146,8 +146,11 @@ func isConnectionErr(err error) bool {
 	if err == nil {
 		return false
 	}
-	return strings.Contains(err.Error(), "connection timed out") ||
-		strings.Contains(err.Error(), "connection refused")
+	msg := err.Error()
+	return strings.Contains(msg, "connection timed out") || // server not yet listening
+		strings.Contains(msg, "connection refused") || // port not open
+		strings.Contains(msg, "connection reset") || // server closed mid-handshake
+		strings.Contains(msg, "operation not permitted") // blocked by network policy (e.g. Cilium)
 }
 
 // isEnterpriseError returns true if the error indicates Community Edition
